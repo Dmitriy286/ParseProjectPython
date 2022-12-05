@@ -50,7 +50,7 @@ def parse_one_docx():
 
             try:
                 outs, errs = p.communicate(timeout=15)
-            except TimeoutExpired:
+            except subprocess.TimeoutExpired:
                 p.kill()
                 outs, errs = p.communicate()
 
