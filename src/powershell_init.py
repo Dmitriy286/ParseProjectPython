@@ -19,7 +19,7 @@ def run_script_from_test_file():
     ps = r"C:\Users\Professional\Desktop\Programming\foo.ps1 " + siteUrl + " " + fileName
     p = subprocess.Popen(["powershell.exe",
                           ps],
-                         stdout=sys.stdout)
+                         stdout=sys.stdout, )
     p.communicate()
 
 

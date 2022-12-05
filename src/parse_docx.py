@@ -1,17 +1,22 @@
+import logging
+from threading import Thread
+from time import sleep
+
 from docx import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from urllib.parse import unquote
 import re
 import pandas as pd
 import subprocess, sys
+from win32api import MessageBox
 
 
 def parse_one_docx():
 
     #script load
 
-    # docx_file = r"C:\Temp5\Document1"
-    docx_file = r"C:\Users\Professional\Desktop\Programming\Parse project\FOR_PATHS_1\Документ"
+    docx_file = r"C:\Temp5\Документ"
+    # docx_file = r"C:\Users\Professional\Desktop\Programming\Parse project\FOR_PATHS_1\Документ"
 
     document = Document(docx_file + ".docx")
 
@@ -40,9 +45,9 @@ def parse_one_docx():
             driveListname, filename = make_data_frame(value.target_ref)
 
             # раскомментировать на локальном компьютере:
-            ps = r"C:\Users\Professional\Desktop\Programming\foo.ps1 " + siteUrlLink + " " + driveListname + " " + filename
+            #ps = r"C:\Users\Professional\Desktop\Programming\foo.ps1 " + siteUrlLink + " " + driveListname + " " + filename
 
-            #ps = r"C:\Temp5\MakeAbsoluteUrl.ps1 " + siteUrlLink + " " + driveListname + " " + filename
+            ps = r"C:\Temp5\MakeAbsoluteUrl.ps1 " + siteUrlLink + " " + driveListname + " " + filename
             p = subprocess.Popen(["powershell.exe",
                                   ps],
                                  stdout=subprocess.PIPE)
@@ -89,9 +94,9 @@ def make_data_frame(link):
     df = pd.read_csv('99999999.csv', delimiter=';')
 
     data = df[['site', 'drive', 'path', 'weburl', 'link']]
-    print(data)
+    logging.info(data)
     df['number'] = df['site'].index
-    print(df)
+    logging.info(df)
 
     link_dict = dict(zip(df['number'], df['link']))
 
@@ -115,8 +120,8 @@ def make_data_frame(link):
         pattern = r'999/\w{4}'
         # string = unquote(link)
         search = re.search(pattern, link)
-        print(link)
-        print(search)
+        logging.info(link)
+        logging.info(search)
         pattern_for_search = search[0].removeprefix("999/")
         for index, url in link_dict.items():
             if pattern_for_search in str(url):
@@ -125,12 +130,12 @@ def make_data_frame(link):
         filename = take_filename_from_url(link, df, row_index_for_collecting_data, isNormalLink)
         powershell_listname = drive_dict[row_index_for_collecting_data]
 
-    print("pattern_for_search:")
-    print(pattern_for_search)
-    print("filename:")
-    print(filename)
-    print("powershell_listname:")
-    print(powershell_listname)
+    logging.info("pattern_for_search:")
+    logging.info(pattern_for_search)
+    logging.info("filename:")
+    logging.info(filename)
+    logging.info("powershell_listname:")
+    logging.info(powershell_listname)
 
     return powershell_listname, filename
 
@@ -161,4 +166,26 @@ def take_filename_from_url(link, df, row_index_for_collecting_data, isNormalLink
 
 
 if __name__ == '__main__':
-    parse_one_docx()
+
+
+    logging.basicConfig(level=logging.DEBUG, filename="py_log.log", filemode="w",
+                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.debug("A DEBUG Message")
+    logging.info("An INFO")
+    logging.warning("A WARNING")
+    logging.error("An ERROR")
+    logging.critical("A message of CRITICAL severity")
+
+    try:
+        parse_one_docx()
+
+    except Exception:
+
+        import traceback
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        traceback_exception = traceback.TracebackException(exc_type, exc_value, exc_tb)
+        MessageBox(0, ''.join(traceback_exception.format()), "Сообщение об ошибке", 0)
+    input("Press Enter")
+
+
+
