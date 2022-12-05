@@ -3,8 +3,6 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from urllib.parse import unquote
 import re
 import pandas as pd
-import flask
-from flask import request
 import subprocess, sys
 
 
@@ -12,6 +10,7 @@ def parse_one_docx():
 
     #script load
 
+    # docx_file = r"C:\Temp5\Document1"
     docx_file = r"C:\Users\Professional\Desktop\Programming\Parse project\FOR_PATHS_1\Документ"
 
     document = Document(docx_file + ".docx")
@@ -41,9 +40,9 @@ def parse_one_docx():
             driveListname, filename = make_data_frame(value.target_ref)
 
             # раскомментировать на локальном компьютере:
-            # ps = r"C:\Users\Professional\Desktop\Programming\foo.ps1 " + siteUrlLink + " " + driveListname + " " + filename
+            ps = r"C:\Users\Professional\Desktop\Programming\foo.ps1 " + siteUrlLink + " " + driveListname + " " + filename
 
-            ps = r"C:\Temp5\MakeAbsoluteUrl.ps1 " + siteUrlLink + " " + driveListname + " " + filename
+            #ps = r"C:\Temp5\MakeAbsoluteUrl.ps1 " + siteUrlLink + " " + driveListname + " " + filename
             p = subprocess.Popen(["powershell.exe",
                                   ps],
                                  stdout=subprocess.PIPE)
@@ -56,12 +55,26 @@ def parse_one_docx():
 
             print("Возврат из скрипта:")
             print(outs)
-            print(outs[len(outs) - 1])
+            print(type(outs))
+
+            # string = eval(outs)
+            string = outs.decode('Windows-1251')
+            print(type(string))
+            print(string)
+
+            pattern = r'result: .+ end'
+            # pattern = re.compile('result: \.+ end')
+            # string = outs.decode("utf-8")
+
+            search = re.search(pattern, string)
+            result_from_script = search[0].removeprefix("result: ").removesuffix(" end")
+
+            print(result_from_script)
 
             # ==========================
 
             #убрать хардкод:
-            new_url=r"https://www.google.com"
+            new_url=result_from_script
             document.part.rels.add_relationship(value.reltype, new_url, value.rId, value.is_external)
 
     out_file=docx_file + "-out.docx"
@@ -107,7 +120,7 @@ def make_data_frame(link):
         pattern_for_search = search[0].removeprefix("999/")
         for index, url in link_dict.items():
             if pattern_for_search in str(url):
-                row_index_for_collecting_data = int(index);
+                row_index_for_collecting_data = int(index)
         isNormalLink = False
         filename = take_filename_from_url(link, df, row_index_for_collecting_data, isNormalLink)
         powershell_listname = drive_dict[row_index_for_collecting_data]
@@ -145,3 +158,7 @@ def take_filename_from_url(link, df, row_index_for_collecting_data, isNormalLink
     #todo доделать чтобы из столбца path вытаскивал подсайты после "root:": root:/InnerTest/MoreInnerTest
 
     return filename
+
+
+if __name__ == '__main__':
+    parse_one_docx()
